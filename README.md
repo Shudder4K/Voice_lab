@@ -1,5 +1,5 @@
-##Whisper Speech-to-Text Fine-tuning (Ukrainian TESS)
-/n##Опис
+Whisper Speech-to-Text Fine-tuning (Ukrainian TESS)
+Опис
 Цей проект демонструє повний пайплайн для донавчання моделі Whisper від OpenAI на кастомному датасеті аудіо (наприклад, TESS з українською розміткою). Навчання реалізовано за допомогою PyTorch Lightning для максимальної структури та reproducibility.
 
 В основі лежить:
