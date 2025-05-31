@@ -1,107 +1,51 @@
-Whisper Speech-to-Text Fine-tuning (Ukrainian TESS)
-Опис
-Цей проект демонструє повний пайплайн для донавчання моделі Whisper від OpenAI на кастомному датасеті аудіо (наприклад, TESS з українською розміткою). Навчання реалізовано за допомогою PyTorch Lightning для максимальної структури та reproducibility.
+# Fine-tuning Whisper-small на TESS Toronto Dataset
 
-В основі лежить:
+Цей проєкт виконує донавчання моделі [`openai/whisper-small`](https://huggingface.co/openai/whisper-small) для задачі автоматичного розпізнавання мовлення (ASR) на основі датасету TESS Toronto. Навчання організоване за допомогою PyTorch Lightning.
 
-Власна генерація транскрипцій із імен файлів (Say the word ...).
+---
 
-Автоматичний поділ на train/val/test по списку TEST_IDS.
+## Опис проєкту
 
-Додавання фічей та токенізація за допомогою WhisperProcessor.
+- **Дані:** аудіофайли `.wav` з папки `tess_wav`. Транскрипти генеруються з імен файлів.
+- **Модель:** OpenAI Whisper (small)
+- **Пайплайн:** PyTorch Lightning + Huggingface Transformers + Torchmetrics
+- **Метрики:** WER (Word Error Rate), CER (Character Error Rate)
+- **Файл з кодом:** [`l4.py`](l4.py)
 
-Гнучкий DataModule для PyTorch Lightning.
+---
 
-Метріки WER (Word Error Rate) та CER (Character Error Rate) для оцінки якості.
+## Основні параметри
 
-Вимоги
-Python 3.9–3.12
+- **Batch size (train/val):** 16 / 8
+- **Epochs:** 2 (можна змінити в `CFG`)
+- **Sampling rate:** 16kHz
+- **GPU:** RTX 3060/4070 (чи інший CUDA-пристрій)
+- **Мова:** Англійська (генерується транскрипція “Say the word …”)
 
-CUDA-compatible GPU (рекомендовано)
+---
 
-Пакети:
-transformers, datasets, torch, torchmetrics, pytorch_lightning
+## Запуск
 
-Встановлення
-bash
-Копіювати
-Редагувати
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install transformers datasets torchmetrics pytorch_lightning
-Обов'язково перевірити, що версії torch та lightning сумісні з GPU та вашим CUDA.
+```bash
+# Віртуальне середовище (рекомендується)
+python -m venv .venv
+source .venv/bin/activate   # або .venv\Scripts\activate на Windows
 
-Датасет
-Дата-аудіо зберігаються у папці, наприклад,
-C:\Users\User\PycharmProjects\Voice\tess_wav
+# Встановити залежності
+pip install torch torchvision torchaudio pytorch-lightning transformers datasets torchmetrics
 
-Ім'я кожного аудіофайлу кодує таргет: наприклад, OAF_back_angry.wav → транскрипт Say the word back.
-
-Поділ на тестовий сет — через перелік TEST_IDS у класі CFG.
-
-Структура коду
-WhisperDataModule — створює train/val/test датасети, кастомізує препроцесінг і collate_fn.
-
-WhisperFineTuner — PyTorch Lightning-модуль для навчання, валідації та логування метрик.
-
-remove_columns_if_exists — допоміжна функція, яка безпечно видаляє непотрібні колонки з датасетів.
-
-train_dataloader/val_dataloader/test_dataloader — оптимізовані під lightning функції.
-
-main — точка входу: ініціалізує все та запускає тренування.
-
-Як запустити
-Скопіювати свій датасет у потрібну папку.
-
-Вказати шлях у CFG.DATA_DIR.
-
-Запустити файл l4.py:
-
-bash
-Копіювати
-Редагувати
+# Запустити навчання
 python l4.py
-Або, для Jupyter Notebook, розбити код на клітинки (у файлі вже враховані всі нюанси для роботи в ноутбуці).
 
-Приклад результату
-Результати тренування (заповнити після запуску):
+| Epoch | Train Loss | Val WER | Val CER |
+| ----- | ---------- | ------- | ------- |
+| 0     | 0.000459   | 0.105   | 0.0251  |
+| 1     | 5e-5       | 0.0234  | 0.00559 |
+| 2     | 0.00031    | 0.0234  | 0.00559 |
 
-python-repl
-Копіювати
-Редагувати
-Epoch 0: train_loss=0.000459, val_WER=0.105, val_CER=0.0251
-Epoch 1: train_loss=5e-5, val_WER=0.0234, val_CER=0.00559
-...
-Пояснення параметрів
-CFG.MODEL_NAME — яку модель Whisper використовувати.
-
-CFG.SR — sampling rate (Hz).
-
-CFG.NUM_WORKERS — для DataLoader (на Windows ставте 0 або 1).
-
-MAX_EPOCHS, BATCH_SIZE, LEARNING_RATE — стандартно для глибокого навчання.
-
-gradient_checkpointing_enable — зменшує споживання GPU-пам’яті для великих моделей.
-
-Тестування і кастомні налаштування
-Для покращення якості навчання можна експериментувати з:
-
-поділом train/val/test
-
-batch size та lr
-
-більш тривалою треніровкою
-
-Якщо модель починає "завчати" (overfit) — збільшіть розмір датасету або використайте регуляризацію.
-
-Відомі проблеми/поради
-На Windows іноді краще ставити num_workers=0 у DataLoader.
-
-Для покращення стабільності використовуйте precision="16-mixed" для сучасних відеокарт.
-
-
-Результати
-Epoch	Train Loss	Val WER	Val CER
-0	0.000459	0.105	0.0251
-1	0.00005	0.0234	0.00559
-2	0.00031	0.0234	0.00559
+.
+├── l4.py                # Основний код для тренування
+├── tess_wav/            # Аудіофайли
+├── requirements.txt     # Список залежностей (створи вручну, якщо потрібно)
+└── README.md            # (цей файл)
 
